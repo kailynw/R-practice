@@ -1,9 +1,9 @@
 # Install packages
 library(httr)
 library(rvest)
+library(gtools)
 
 get_wiki_covid19_page <- function() {
-  
   #Covid 19 url param
   wiki_url_param_value <- "Template:COVID-19_testing_by_country"
   # Wiki page base
@@ -56,28 +56,81 @@ get_subset_data_task_4 <- function(dataframe){
 calculate_worldwide_data_task_5 <- function(dataframe){
   total_confirmed_cases <- 0
   total_tested_cases <- 0
-  c <- 0
+  
   for(case in dataframe$confirmed){
     total_confirmed_cases <- total_confirmed_cases + case
   }
   
-  print(dataframe['confirmed.tested.ratio']$"")
-  for (test_case in dataframe['confirmed.tested.ratio'][0]){
+  for (test_case in dataframe['confirmed.tested.ratio']){
     c <- test_case
     total_tested_cases <- total_tested_cases + test_case
   }
-  print(total_tested_cases)
-  
-  return(c)
 
+ return(list(total_confirmed_cases, total_tested_cases))
+}
+
+get_a_country_list_which_reported_task_6 <- function(dataframe){
+  countrys <- dataframe$country
+  a_to_z_sort <- mixedsort(countrys)
+  z_to_a_sort <- mixedsort(countrys, decreasing = TRUE)
+  return(z_to_a_sort)
+}
+
+identity_countries_names_task_7 <- function(dataframe){
+  data <- dataframe
+  data %>% filter(!grepl("United.+", data))
+  return (data)
+}
+
+pick_two_countries_task_8 <- function(dataframe){
+  country <- dataframe$country
+  confirmed <- dataframe$confirmed
+  confirmed_population_ratio <- dataframe['confirmed.population.ratio']
+  subset <- list(country, confirmed, confirmed_population_ratio)[1:10]
+  return (subset)
+}
+
+compare_which_one_selected_countries_task_9 <- function(dataframe){
+  confirmed_cases <- dataframe['confirmed.population.ratio']
+  largest_ratio <- 0
+  
+  for(case in confirmed_cases){
+    if(largest_ratio<case){
+      larget_ratio <- case
+    }
+  }
+  
+  return (largest_ratio)
+}
+
+find_countries_task_10 <- function(dataframe){
+  less_than_1_perc_list <- list()
+  confirmed_cases <- dataframe['confirmed.population.ratio']
+  
+  for(case_ratio in confirmed_cases){
+    if(case_ratio< 0.01){
+      less_than_1_perc_list[[length(less_than_1_perc_list)+1]] = case
+    }
+  }
+  
+  return(less_than_1_perc_list)
+}
+
+# Get data from wiki site and export as csv file
 response <- get_wiki_covid19_page()
 data_frame <- extract_covid19_test_data_frame(response)
 processed_data <- preprocess_covid_data_frame(data_frame)
 write.csv(processed_data, "/Users/kailynwilliams/R-practice/CovidAnalysis/covid_data.csv")
 
-
 #download csv
 covid_csv_file <- download.file("https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-RP0101EN-Coursera/v2/dataset/covid.csv", destfile="/Users/kailynwilliams/R-practice/CovidAnalysis/aws_covid_data.csv")
 covid_data_frame_csv <- read.csv("aws_covid_data.csv", header=TRUE, sep=",")
+
+#Task assignments
 task4_data <- get_subset_data_task_4(covid_data_frame_csv)
 task5_data <- calculate_worldwide_data_task_5(covid_data_frame_csv)
+task6_data <- get_a_country_list_which_reported_task_6(covid_data_frame_csv)
+task7_data <- identity_countries_names_task_7(covid_data_frame_csv)
+task8_data <- pick_two_countries_task_8(covid_data_frame_csv)
+task9_data <- compare_which_one_selected_countries_task_9(covid_data_frame_csv)
+task10_data <- find_countries_task_10(covid_data_frame_csv)
